@@ -1,0 +1,56 @@
+version: '2.1'
+
+services:
+
+  db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+
+  nginx:
+    container_name: nginx
+    tty: true
+    hostname: nginx
+    ports:
+      - "8080:80"
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    links:
+      - fpm
+    volumes_from:
+      - data
+
+  fpm:
+    container_name: fpm
+    hostname: fpm
+    tty: true
+    build:
+      context: .
+      dockerfile: php/Dockerfile
+    volumes_from:
+      - data
+  data:
+    build:
+      context: .
+      dockerfile: data/Dockerfile
+    volumes:
+      - /var/www/html
+
+  portainer:
+    container_name: portainers
+    image: portainer/portainer
+    restart: always
+    command: -H unix:///var/run/docker.sock
+    ports:
+      - "9080:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8082:8080
